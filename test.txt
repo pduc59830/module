@@ -1,0 +1,46 @@
+/*
+ * LOCKET GOLD MASTER SCRIPT - 2026 EDITION
+ */
+
+let body = $response.body;
+let url = $request.url;
+
+if (body) {
+    if (url.includes("api.revenuecat.com")) {
+        let obj = JSON.parse(body);
+        const planID = "com.locket.gold.yearly";
+        const date = "2024-01-01T00:00:00Z";
+
+        if (obj.subscriber) {
+            obj.subscriber.entitlements["Gold"] = {
+                "expires_date": "2099-12-31T00:00:00Z",
+                "product_identifier": planID,
+                "purchase_date": date
+            };
+            obj.subscriber.subscriptions[planID] = {
+                "expires_date": "2099-12-31T00:00:00Z",
+                "purchase_date": date,
+                "original_purchase_date": date,
+                "ownership_type": "PURCHASED",
+                "store": "app_store"
+            };
+            obj.subscriber.purchases_entitlement = "Gold";
+        }
+        body = JSON.stringify(obj);
+    }
+
+    if (url.includes("api.locketcamera.com")) {
+        body = body.replace(/"profile_badge"\s*:\s*"[^"]*"/g, '"profile_badge":"subscriber"');
+        body = body.replace(/"profile_badge_visible"\s*:\s*false/g, '"profile_badge_visible":true');
+        body = body.replace(/"is_gold"\s*:\s*false/g, '"is_gold":true');
+        body = body.replace(/"is_subscriber"\s*:\s*false/g, '"is_subscriber":true');
+
+        body = body.replace(/"upsell_features"\s*:\s*"([^"]*)"/g, (match, p1) => {
+            let decoded = p1.replace(/\\"/g, '"');
+            decoded = decoded.replace(/:false/g, ':true');
+            return '"upsell_features":"' + decoded.replace(/"/g, '\\"') + '"';
+        });
+    }
+}
+
+$done({ body });
